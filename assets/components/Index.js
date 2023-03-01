@@ -4,6 +4,8 @@ import { Button, Rating, Spinner } from 'flowbite-react';
 const Index = props => {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [yearFilter, setYearFilter] = useState(true);
+    const [ratingFilter, setRatingFilter] = useState(false);
 
     const fetchMovies = () => {
         setLoading(true);
@@ -16,6 +18,96 @@ const Index = props => {
             });
     }
 
+    // Sort the movies by year
+
+    const filterByYear = () => {
+      if (!yearFilter)
+      {
+        setYearFilter(true);
+        movies.sort((a, b) => {return b.year - a.year});
+      }
+      else
+      {
+        setYearFilter(false);
+        movies.sort((a, b) => {return a.year - b.year});
+      }
+    }
+
+    // Year sorting component
+
+    const FilterButtonYear = props => { 
+      if (yearFilter) {
+        return (
+          <div
+            className="flex md:flex-row text-align-left font-medium cursor-pointer items-center"
+            onClick={filterByYear}
+          >
+            <i className="fa-solid fa-caret-up"></i>&nbsp;&nbsp;Most recent
+          </div>
+        );
+      } else {
+        return (
+          <div
+            className="flex md:flex-row text-align-left font-medium cursor-pointer items-center"
+            onClick={filterByYear}
+          >
+            <i className="fa-solid fa-caret-down"></i>&nbsp;&nbsp;Least recent
+          </div>
+        );
+      }
+      
+    }
+
+    // Sort the movies by rating
+
+    const filterByRating = () => {
+      if (!ratingFilter) {
+        setRatingFilter(true);
+        movies.sort((a, b) => {return b.rating - a.rating});
+      } else {
+        setRatingFilter(false);
+        movies.sort((a, b) => {return a.rating - b.rating});
+      }
+    }
+
+    // Rating sorting component
+
+    const FilterButtonRating = props => {
+      if (ratingFilter) {
+        return (
+          <div
+            className="flex text-align-left font-medium cursor-pointer items-center"
+            onClick={filterByRating}
+          >
+            <i className="fa-solid fa-caret-up"></i>&nbsp;&nbsp;Most rated
+          </div>
+        );
+      } else {
+        return (
+          <div
+            className="flex text-align-left font-medium cursor-pointer items-center"
+            onClick={filterByRating}
+          >
+            <i className="fa-solid fa-caret-down"></i>&nbsp;&nbsp;Least rated
+          </div>
+        );
+      }
+    }
+
+    // Boilerplate component for the genre filter
+
+    const GenreSelector = props => {
+      return (
+        <div className="flex grow font-medium cursor-pointer items-center">
+          <label htmlFor="genres">Filter by genre:</label>
+          <select name="genres" id="genres" className="outline-0 outline-transparent border-0 border-transparent font-medium align-middle">
+            <option value="Action">Action</option>
+            <option value="Drama">Drama</option>
+          </select>
+        </div>
+      );
+    }
+
     useEffect(() => {
         fetchMovies();
     }, []);
@@ -23,7 +115,11 @@ const Index = props => {
     return (
         <Layout>
           <Heading />
-
+          <FilterBar>
+            <GenreSelector /> 
+            <FilterButtonYear />
+            <FilterButtonRating />
+          </FilterBar>
           <MovieList loading={loading}>
             {movies.map((item, key) => (
               <MovieItem key={key} {...item} />
@@ -45,17 +141,29 @@ const Layout = props => {
 
 const Heading = props => {
     return (
-        <div className="mx-auto max-w-screen-sm text-center mb-8 lg:mb-16">
-          <h1 className="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">
+        <div className="mx-auto max-w-screen-sm mb-8 lg:mb-16">
+          <h1 className="mb-4 text-4xl tracking-tight text-center font-extrabold text-gray-900 dark:text-white">
             Movie Collection
           </h1>
 
-          <p className="font-light text-gray-500 lg:mb-16 sm:text-xl dark:text-gray-400">
+          <p className="font-light text-gray-500 text-center lg:mb-16 sm:text-xl dark:text-gray-400">
             Explore the whole collection of movies
           </p>
         </div>
     );
 };
+
+// Component to wrap the sorting and filtering functionality
+
+const FilterBar = props => {
+    return (
+          <div className="mx-auto max-w-screen-xl mb-8 lg:mb-16">
+              <div className="md:flex gap-4 justify-between">
+                {props.children}                
+              </div>
+          </div>
+    );
+}
 
 const MovieList = props => {
     if (props.loading) {
