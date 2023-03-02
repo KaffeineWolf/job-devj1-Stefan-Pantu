@@ -4,43 +4,64 @@ import { Button, Rating, Spinner } from 'flowbite-react';
 const Index = props => {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [yearFilter, setYearFilter] = useState(true);
-    const [ratingFilter, setRatingFilter] = useState(false);
+    const [yearSort, setYearSort] = useState(true);
+    const [ratingSort, setRatingSort] = useState(false);
+    const [SelectedGenre, setSelectedGenre] = useState();
+    const [genres, setGenres] = useState([]);
+
+    const fetchGenres = () => {
+      return fetch('/api/genres')
+          .then(response => response.json())
+          .then(data => {
+              setGenres(data.genres);
+          });
+  }
 
     const fetchMovies = () => {
         setLoading(true);
+        
+        var url = '/api/movies';
+        const params = new URLSearchParams();
 
-        return fetch('/api/movies')
-            .then(response => response.json())
-            .then(data => {
-                setMovies(data.movies);
-                setLoading(false);
-            });
+        if (SelectedGenre) {
+          params.append('genreId', SelectedGenre);
+        }
+
+        if (params.toString()) {
+          url += '?' + params.toString();
+        }
+
+        return fetch(url)
+          .then(response => response.json())
+          .then(data => {
+              setMovies(data.movies);
+              setLoading(false);
+          });
     }
 
     // Sort the movies by year
 
-    const filterByYear = () => {
-      if (!yearFilter)
+    const sortByYear = () => {
+      if (!yearSort)
       {
-        setYearFilter(true);
+        setYearSort(true);
         movies.sort((a, b) => {return b.year - a.year});
       }
       else
       {
-        setYearFilter(false);
+        setYearSort(false);
         movies.sort((a, b) => {return a.year - b.year});
       }
     }
 
     // Year sorting component
 
-    const FilterButtonYear = props => { 
-      if (yearFilter) {
+    const SortButtonYear = props => { 
+      if (yearSort) {
         return (
           <div
             className="flex md:flex-row text-align-left font-medium cursor-pointer items-center"
-            onClick={filterByYear}
+            onClick={sortByYear}
           >
             <i className="fa-solid fa-caret-up"></i>&nbsp;&nbsp;Most recent
           </div>
@@ -49,7 +70,7 @@ const Index = props => {
         return (
           <div
             className="flex md:flex-row text-align-left font-medium cursor-pointer items-center"
-            onClick={filterByYear}
+            onClick={sortByYear}
           >
             <i className="fa-solid fa-caret-down"></i>&nbsp;&nbsp;Least recent
           </div>
@@ -60,24 +81,24 @@ const Index = props => {
 
     // Sort the movies by rating
 
-    const filterByRating = () => {
-      if (!ratingFilter) {
-        setRatingFilter(true);
+    const sortByRating = () => {
+      if (!ratingSort) {
+        setRatingSort(true);
         movies.sort((a, b) => {return b.rating - a.rating});
       } else {
-        setRatingFilter(false);
+        setRatingSort(false);
         movies.sort((a, b) => {return a.rating - b.rating});
       }
     }
 
     // Rating sorting component
 
-    const FilterButtonRating = props => {
-      if (ratingFilter) {
+    const SortButtonRating = props => {
+      if (ratingSort) {
         return (
           <div
             className="flex text-align-left font-medium cursor-pointer items-center"
-            onClick={filterByRating}
+            onClick={sortByRating}
           >
             <i className="fa-solid fa-caret-up"></i>&nbsp;&nbsp;Most rated
           </div>
@@ -86,7 +107,7 @@ const Index = props => {
         return (
           <div
             className="flex text-align-left font-medium cursor-pointer items-center"
-            onClick={filterByRating}
+            onClick={sortByRating}
           >
             <i className="fa-solid fa-caret-down"></i>&nbsp;&nbsp;Least rated
           </div>
@@ -100,25 +121,34 @@ const Index = props => {
       return (
         <div className="flex grow font-medium cursor-pointer items-center">
           <label htmlFor="genres">Filter by genre:</label>
-          <select name="genres" id="genres" className="outline-0 outline-transparent border-0 border-transparent font-medium align-middle">
-            <option value="Action">Action</option>
-            <option value="Drama">Drama</option>
+          <select 
+            name="genres" 
+            id="genres"
+            value={SelectedGenre}
+            onChange={event => setSelectedGenre(event.target.value)} 
+            className="outline-0 outline-transparent border-0 border-transparent font-medium align-middle"
+          >
+            <option key="default" value="">Tutti</option>
+            {genres.map(genre => (
+              <option key={genre.id} value={genre.id}>{genre.value}</option>
+            ))}            
           </select>
         </div>
       );
     }
 
     useEffect(() => {
+        fetchGenres();
         fetchMovies();
-    }, []);
+    }, [SelectedGenre]);
 
     return (
         <Layout>
           <Heading />
           <FilterBar>
-            <GenreSelector /> 
-            <FilterButtonYear />
-            <FilterButtonRating />
+            <GenreSelector genres={genres}/> 
+            <SortButtonYear />
+            <SortButtonRating />
           </FilterBar>
           <MovieList loading={loading}>
             {movies.map((item, key) => (
